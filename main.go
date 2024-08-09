@@ -1,20 +1,29 @@
 package main
 
 import (
+	"abhiroopsanta.dev/event-booking-api/db"
 	"abhiroopsanta.dev/event-booking-api/models"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"log"
 	"net/http"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	db.InitDb()
 	server := gin.Default()
 	fmt.Println("Server started....")
 
 	server.GET("/events", getEvents)
 	server.POST("/events", createEvent)
 
-	err := server.Run(":8080")
+	err = server.Run(":8080")
 	if err != nil {
 		fmt.Println(err)
 	}
