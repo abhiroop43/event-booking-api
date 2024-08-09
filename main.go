@@ -26,5 +26,17 @@ func getEvents(context *gin.Context) {
 }
 
 func createEvent(context *gin.Context) {
+	var event models.Event
 
+	err := context.ShouldBindJSON(&event)
+	if err != nil {
+		fmt.Println(err)
+		context.JSON(http.StatusBadRequest, gin.H{"message": "invalid request object"})
+		return
+	}
+
+	event.Id = 1
+	event.UserId = 1
+	event.Save()
+	context.JSON(http.StatusCreated, gin.H{"message": "event created successfully", "data": event})
 }
