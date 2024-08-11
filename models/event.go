@@ -1,9 +1,12 @@
 package models
 
-import "time"
+import (
+	"abhiroopsanta.dev/event-booking-api/db"
+	"time"
+)
 
 type Event struct {
-	Id          int
+	Id          int64
 	Name        string    `binding:"required"`
 	Description string    `binding:"required"`
 	Location    string    `binding:"required"`
@@ -13,9 +16,28 @@ type Event struct {
 
 var events []Event
 
-func (event Event) Save() {
-	// TODO: add it to a DB
-	events = append(events, event)
+func (event Event) Save() error {
+	query := `INSERT INTO 
+    			events(name, description, location, dateTime, user_id) 
+				VALUES (?,?,?,?,?)`
+	stmt, err := db.DB.Prepare(query)
+
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	exec, err := stmt.Exec(event.Name, event.Description, event.Location, event.DateTime, event.UserId)
+	if err != nil {
+		return err
+	}
+
+	id, err := exec.LastInsertId()
+
+	event.Id = id
+	//events = append(events, event)
+	return err
 }
 
 func GetAllEvents() []Event {
