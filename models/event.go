@@ -2,6 +2,7 @@ package models
 
 import (
 	"abhiroopsanta.dev/event-booking-api/db"
+	"log"
 	"time"
 )
 
@@ -16,10 +17,10 @@ type Event struct {
 
 var events []Event
 
-func (event Event) Save() error {
-	query := `INSERT INTO 
-    			events(name, description, location, dateTime, user_id) 
-				VALUES (?,?,?,?,?)`
+func (event *Event) Save() error {
+	query := `INSERT INTO
+       events(name, description, location, datetime, userid)
+    VALUES ($1, $2, $3, $4, $5) RETURNING id`
 	stmt, err := db.DB.Prepare(query)
 
 	if err != nil {
@@ -28,16 +29,13 @@ func (event Event) Save() error {
 
 	defer stmt.Close()
 
-	exec, err := stmt.Exec(event.Name, event.Description, event.Location, event.DateTime, event.UserId)
+	err = stmt.QueryRow(event.Name, event.Description, event.Location, event.DateTime, event.UserId).Scan(&event.Id)
 	if err != nil {
 		return err
 	}
 
-	id, err := exec.LastInsertId()
-
-	event.Id = id
-	//events = append(events, event)
-	return err
+	log.Printf("Event saved with ID: %d", event.Id)
+	return nil
 }
 
 func GetAllEvents() []Event {

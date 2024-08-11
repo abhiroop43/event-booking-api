@@ -44,8 +44,13 @@ func createEvent(context *gin.Context) {
 		return
 	}
 
-	event.Id = 1
-	event.UserId = 1
-	event.Save()
+	//event.Id = 1
+	//event.UserId = 1
+	err = event.Save()
+	if err != nil {
+		fmt.Printf("Error saving event: %v\n", err)
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "could not save event"})
+		return
+	}
 	context.JSON(http.StatusCreated, gin.H{"message": "event created successfully", "data": event})
 }
