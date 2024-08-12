@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func main() {
@@ -21,6 +22,7 @@ func main() {
 	fmt.Println("Server started....")
 
 	server.GET("/events", getEvents)
+	server.GET("/events/:id", getEvent)
 	server.POST("/events", createEvent)
 
 	err = server.Run(":8080")
@@ -33,10 +35,10 @@ func getEvents(context *gin.Context) {
 	events, err := models.GetAllEvents()
 	if err != nil {
 		fmt.Println(err)
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "could not get events, please try again later"})
 		return
 	}
-	context.JSON(http.StatusOK, events)
+	context.JSON(http.StatusOK, gin.H{"message": "events retrieved successfully", "data": events})
 }
 
 func createEvent(context *gin.Context) {
@@ -54,8 +56,27 @@ func createEvent(context *gin.Context) {
 	err = event.Save()
 	if err != nil {
 		fmt.Printf("Error saving event: %v\n", err)
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "could not save event"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "could not save event, please try again later"})
 		return
 	}
 	context.JSON(http.StatusCreated, gin.H{"message": "event created successfully", "data": event})
+}
+
+func getEvent(context *gin.Context) {
+	eventId, err := strconv.ParseInt(context.Param("id"), 10, 64)
+
+	if err != nil {
+		fmt.Println(err)
+		context.JSON(http.StatusBadRequest, gin.H{"message": "invalid event id, expecting an integer"})
+		return
+	}
+
+	event, err := models.GetEventById(eventId)
+	if err != nil {
+		fmt.Printf("Error getting event with id %v: %v\n", eventId, err)
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "could not get event, please try again later"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"message": "event retrieved successfully", "data": event})
 }
