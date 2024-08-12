@@ -100,3 +100,22 @@ func (event *Event) Update() error {
 	_, err = stmt.Exec(&event.Name, &event.Description, &event.Location, &event.DateTime, &event.Id)
 	return err
 }
+
+func DeleteEvent(eventId int64) error {
+	query := `DELETE FROM events WHERE id = $1`
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	defer func(stmt *sql.Stmt) {
+		sqlErr := stmt.Close()
+		if sqlErr != nil {
+			log.Println("Error closing sql:", sqlErr)
+		}
+	}(stmt)
+
+	_, err = stmt.Exec(eventId)
+	return err
+}
