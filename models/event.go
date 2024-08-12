@@ -2,6 +2,7 @@ package models
 
 import (
 	"abhiroopsanta.dev/event-booking-api/db"
+	"database/sql"
 	"log"
 	"time"
 )
@@ -15,8 +16,6 @@ type Event struct {
 	UserId      int
 }
 
-var events []Event
-
 func (event *Event) Save() error {
 	query := `INSERT INTO
        events(name, description, location, datetime, userid)
@@ -27,7 +26,12 @@ func (event *Event) Save() error {
 		return err
 	}
 
-	defer stmt.Close()
+	defer func(stmt *sql.Stmt) {
+		sqlErr := stmt.Close()
+		if sqlErr != nil {
+			log.Println("Error closing query:", sqlErr)
+		}
+	}(stmt)
 
 	err = stmt.QueryRow(event.Name, event.Description, event.Location, event.DateTime, event.UserId).Scan(&event.Id)
 	if err != nil {
@@ -38,6 +42,30 @@ func (event *Event) Save() error {
 	return nil
 }
 
-func GetAllEvents() []Event {
-	return events
+func GetAllEvents() ([]Event, error) {
+	var events []Event
+
+	query := "SELECT id, name, description, location, datetime, userid FROM events"
+	rows, err := db.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(rows *sql.Rows) {
+		sqlErr := rows.Close()
+		if sqlErr != nil {
+			log.Println("Error closing rows:", sqlErr)
+		}
+	}(rows)
+
+	for rows.Next() {
+		var event Event
+		err = rows.Scan(&event.Id, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserId)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+
+	return events, nil
 }

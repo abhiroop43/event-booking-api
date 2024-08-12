@@ -30,7 +30,12 @@ func main() {
 }
 
 func getEvents(context *gin.Context) {
-	events := models.GetAllEvents()
+	events, err := models.GetAllEvents()
+	if err != nil {
+		fmt.Println(err)
+		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
 	context.JSON(http.StatusOK, events)
 }
 
