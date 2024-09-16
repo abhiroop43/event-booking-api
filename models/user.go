@@ -1,9 +1,11 @@
 package models
 
 import (
-	"abhiroopsanta.dev/event-booking-api/db"
 	"database/sql"
 	"log"
+
+	"abhiroopsanta.dev/event-booking-api/db"
+	"abhiroopsanta.dev/event-booking-api/utils"
 )
 
 type User struct {
@@ -15,7 +17,6 @@ type User struct {
 func (u *User) Save() error {
 	query := "INSERT INTO users(email, password) VALUES ($1, $2) RETURNING id"
 	stmt, err := db.DB.Prepare(query)
-
 	if err != nil {
 		return err
 	}
@@ -27,7 +28,12 @@ func (u *User) Save() error {
 		}
 	}(stmt)
 
-	err = stmt.QueryRow(u.Email, u.Password).Scan(&u.Id)
+	hashedPassword, err := utils.HashPassword(u.Password)
+	if err != nil {
+		return err
+	}
+
+	err = stmt.QueryRow(u.Email, hashedPassword).Scan(&u.Id)
 	if err != nil {
 		return err
 	}
