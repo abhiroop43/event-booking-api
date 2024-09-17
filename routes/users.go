@@ -28,3 +28,15 @@ func signup(context *gin.Context) {
 
 	context.JSON(http.StatusCreated, gin.H{"message": "user created successfully", "data": user})
 }
+
+func login(context *gin.Context) {
+	var user models.User
+
+	err := context.ShouldBindJSON(&user)
+
+	if err != nil {
+		fmt.Println(err)
+		context.JSON(http.StatusBadRequest, gin.H{"message": "invalid request object"})
+		return
+	}
+}

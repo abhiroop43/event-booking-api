@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"abhiroopsanta.dev/event-booking-api/db"
@@ -39,5 +40,25 @@ func (u *User) Save() error {
 	}
 
 	log.Printf("User saved with ID: %d", u.Id)
+	return nil
+}
+
+func (u *User) ValidateCredentials() error {
+	query := "SELECT password FROM users WHERE email = $1"
+	row := db.DB.QueryRow(query, u.Email)
+
+	var retrievedPassword string
+	err := row.Scan(&retrievedPassword)
+
+	if err != nil {
+		log.Println("Error retrieving user: ", err)
+		return errors.New("invalid username and/or password")
+	}
+
+	isCorrectPassword := utils.VerifyPassword(u.Password, retrievedPassword)
+	if !isCorrectPassword {
+		return errors.New("invalid username and/or password")
+	}
+
 	return nil
 }

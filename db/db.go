@@ -19,6 +19,7 @@ func InitDb() {
 	dbhost := os.Getenv("DB_HOST")
 	//connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
 	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", user, password, dbhost, dbname)
+	log.Println(connStr)
 	DB, err = sql.Open("postgres", connStr)
 	if err != nil {
 		panic(err)
