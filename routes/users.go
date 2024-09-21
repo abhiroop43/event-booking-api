@@ -2,6 +2,7 @@ package routes
 
 import (
 	"abhiroopsanta.dev/event-booking-api/models"
+	"abhiroopsanta.dev/event-booking-api/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -39,4 +40,20 @@ func login(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "invalid request object"})
 		return
 	}
+
+	err = user.ValidateCredentials()
+
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
+		return
+	}
+
+	token, err := utils.GenerateToken(user.Email, user.Id)
+
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate token, please try again later"})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"token": token, "message": "login successful"})
 }
