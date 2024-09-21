@@ -42,6 +42,8 @@ func createEvent(context *gin.Context) {
 
 	var event models.Event
 
+	// TODO: Event user id should be set to the user id from the token
+
 	err = context.ShouldBindJSON(&event)
 	if err != nil {
 		fmt.Println(err)
