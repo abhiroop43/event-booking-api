@@ -33,7 +33,7 @@ func createEvent(context *gin.Context) {
 	authToken := strings.Split(authHeader, "Bearer ")[1]
 	log.Println("Auth token: ", authToken)
 
-	err := utils.VerifyToken(authToken)
+	userId, err := utils.VerifyToken(authToken)
 
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
@@ -42,8 +42,6 @@ func createEvent(context *gin.Context) {
 
 	var event models.Event
 
-	// TODO: Event user id should be set to the user id from the token
-
 	err = context.ShouldBindJSON(&event)
 	if err != nil {
 		fmt.Println(err)
@@ -51,6 +49,7 @@ func createEvent(context *gin.Context) {
 		return
 	}
 
+	event.UserId = userId
 	err = event.Save()
 	if err != nil {
 		fmt.Printf("Error saving event: %v\n", err)
