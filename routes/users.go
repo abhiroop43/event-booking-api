@@ -27,6 +27,7 @@ func signup(context *gin.Context) {
 		return
 	}
 
+	user.Password = ""
 	context.JSON(http.StatusCreated, gin.H{"message": "user created successfully", "data": user})
 }
 
