@@ -119,3 +119,23 @@ func DeleteEvent(eventId int64) error {
 	_, err = stmt.Exec(eventId)
 	return err
 }
+
+func (e Event) Register(userId int64) error {
+	query := `INSERT INTO registrations(eventid, userid) VALUES ($1, $2)`
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	defer func(stmt *sql.Stmt) {
+		sqlErr := stmt.Close()
+		if sqlErr != nil {
+			log.Println("Error closing query:", err)
+		}
+	}(stmt)
+
+	_, err = stmt.Exec(e.Id, userId)
+
+	return err
+}
