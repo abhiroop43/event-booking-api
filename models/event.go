@@ -16,7 +16,7 @@ type Event struct {
 	UserId      int64
 }
 
-func (event *Event) Save() error {
+func (e *Event) Save() error {
 	query := `INSERT INTO
        events(name, description, location, datetime, userid)
     VALUES ($1, $2, $3, $4, $5) RETURNING id`
@@ -33,12 +33,12 @@ func (event *Event) Save() error {
 		}
 	}(stmt)
 
-	err = stmt.QueryRow(event.Name, event.Description, event.Location, event.DateTime, event.UserId).Scan(&event.Id)
+	err = stmt.QueryRow(e.Name, e.Description, e.Location, e.DateTime, e.UserId).Scan(&e.Id)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Event saved with ID: %d", event.Id)
+	log.Printf("Event saved with ID: %d", e.Id)
 	return nil
 }
 
@@ -81,7 +81,7 @@ func GetEventById(id int64) (*Event, error) {
 	return &event, err
 }
 
-func (event *Event) Update() error {
+func (e *Event) Update() error {
 	query := `UPDATE events
 				SET  name = $1, description = $2, location = $3, datetime = $4
     			WHERE id = $5`
@@ -97,7 +97,7 @@ func (event *Event) Update() error {
 		}
 	}(stmt)
 
-	_, err = stmt.Exec(&event.Name, &event.Description, &event.Location, &event.DateTime, &event.Id)
+	_, err = stmt.Exec(&e.Name, &e.Description, &e.Location, &e.DateTime, &e.Id)
 	return err
 }
 
@@ -120,8 +120,28 @@ func DeleteEvent(eventId int64) error {
 	return err
 }
 
-func (e Event) Register(userId int64) error {
+func (e *Event) Register(userId int64) error {
 	query := `INSERT INTO registrations(eventid, userid) VALUES ($1, $2)`
+
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+
+	defer func(stmt *sql.Stmt) {
+		sqlErr := stmt.Close()
+		if sqlErr != nil {
+			log.Println("Error closing query:", err)
+		}
+	}(stmt)
+
+	_, err = stmt.Exec(e.Id, userId)
+
+	return err
+}
+
+func (e *Event) CancelRegistration(userId int64) error {
+	query := `DELETE FROM registrations WHERE eventid = $1 AND userid = $2`
 
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
